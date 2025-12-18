@@ -16,10 +16,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      private: https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/private.txt
       reject: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/refs/heads/main/Filters/AWAvenue-Ads-Rule-Clash.yaml
-      proxy: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/proxy-list.txt
-      direct: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/direct-list.txt
+      private: https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/refs/heads/release/private.txt
+      proxy: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/proxy-list.txt
+      direct: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/direct-list.txt
+      private-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/private.yaml
+      cn-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.yaml
+      telegram-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/telegram.yaml
 
     steps:
       - name: Checkout code
@@ -42,8 +45,8 @@ jobs:
           echo "payload:" > private.yaml
           touch raw_private.txt
           # 1. 下载并预处理格式
-          curl -sSL ${{ env.private }} | awk -F ':' '/^full:/ {print $2}' >> raw_private.txt
-          curl -sSL ${{ env.private }} | awk -F ':' '/^domain:/ {print "+."$2}' >> raw_private.txt
+          curl -sSLf --retry 3 ${{ env.private }} | awk -F ':' '/^full:/ {print $2}' >> raw_private.txt
+          curl -sSLf --retry 3 ${{ env.private }} | awk -F ':' '/^domain:/ {print "+."$2}' >> raw_private.txt
           if [ -f custom/private.txt ]; then
             sed 's/\r$//' custom/private.txt >> raw_private.txt
           fi
@@ -64,8 +67,8 @@ jobs:
         run: |
           echo "payload:" > direct.yaml
           touch raw_direct.txt
-          curl -sSL ${{ env.direct }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "$2\n"' >> raw_direct.txt
-          curl -sSL ${{ env.direct }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "+.$2\n"' >> raw_direct.txt
+          curl -sSLf --retry 3 ${{ env.direct }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "$2\n"' >> raw_direct.txt
+          curl -sSLf --retry 3 ${{ env.direct }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "+.$2\n"' >> raw_direct.txt
           if [ -f custom/direct.txt ]; then
             sed 's/\r$//' custom/direct.txt >> raw_direct.txt
           fi
@@ -82,8 +85,8 @@ jobs:
         run: |
           echo "payload:" > proxy.yaml
           touch raw_proxy.txt
-          curl -sSL ${{ env.proxy }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "$2\n"' >> raw_proxy.txt
-          curl -sSL ${{ env.proxy }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "+.$2\n"' >> raw_proxy.txt
+          curl -sSLf --retry 3 ${{ env.proxy }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "$2\n"' >> raw_proxy.txt
+          curl -sSLf --retry 3 ${{ env.proxy }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "+.$2\n"' >> raw_proxy.txt
           if [ -f custom/proxy.txt ]; then
             sed 's/\r$//' custom/proxy.txt >> raw_proxy.txt
           fi
@@ -101,7 +104,7 @@ jobs:
           echo "payload:" > reject.yaml
           touch raw_reject.txt
           # 这是一个YAML源，处理方式稍有不同
-          curl -sSL ${{ env.reject }} | grep "  - '" | sed "s/^[[:space:]]*-[[:space:]]*'//g; s/'$//g" >> raw_reject.txt
+          curl -sSLf --retry 3 ${{ env.reject }} | grep "  - '" | sed "s/^[[:space:]]*-[[:space:]]*'//g; s/'$//g" >> raw_reject.txt
           if [ -f custom/reject.txt ]; then
             sed 's/\r$//' custom/reject.txt >> raw_reject.txt
           fi
@@ -129,6 +132,67 @@ jobs:
           python3 filter.py raw_idc.txt
           sed "s/^/  - '/; s/$/'/" raw_idc.txt >> idc.yaml
           rm raw_idc.txt
+
+      - name: Generate private-ip.yaml file
+        run: |
+          echo "payload:" > private-ip.yaml
+          touch raw_private_ip.txt
+          # 1. 从 YAML 源提取 IP (去除开头的 "- "，源文件 IP 无引号)
+          curl -sSLf --retry 3 ${{ env.private-ip }} | grep "  - " | sed "s/^[[:space:]]*-[[:space:]]*//g" >> raw_private_ip.txt
+          
+          # 2. 处理自定义添加
+          if [ -f custom/private-ip.txt ]; then
+            sed 's/\r$//' custom/private-ip.txt >> raw_private_ip.txt
+          fi
+          
+          # 3. 处理自定义移除
+          if [ -f custom/private-ip-remove.txt ]; then
+            sed 's/\r$//' custom/private-ip-remove.txt > clean_remove.txt
+            grep -vxFf clean_remove.txt raw_private_ip.txt > temp_private_ip.txt && mv temp_private_ip.txt raw_private_ip.txt
+            rm clean_remove.txt
+          fi
+          
+          # 4. 格式化输出 (IP CIDR 通常不需要引号，这里只加 "  - ")
+          sed "s/^/  - /" raw_private_ip.txt >> private-ip.yaml
+          rm raw_private_ip.txt
+
+      - name: Generate cn-ip.yaml file
+        run: |
+          echo "payload:" > cn-ip.yaml
+          touch raw_cn_ip.txt
+          curl -sSLf --retry 3 ${{ env.cn-ip }} | grep "  - " | sed "s/^[[:space:]]*-[[:space:]]*//g" >> raw_cn_ip.txt
+          
+          if [ -f custom/cn-ip.txt ]; then
+            sed 's/\r$//' custom/cn-ip.txt >> raw_cn_ip.txt
+          fi
+          
+          if [ -f custom/cn-ip-remove.txt ]; then
+            sed 's/\r$//' custom/cn-ip-remove.txt > clean_remove.txt
+            grep -vxFf clean_remove.txt raw_cn_ip.txt > temp_cn_ip.txt && mv temp_cn_ip.txt raw_cn_ip.txt
+            rm clean_remove.txt
+          fi
+          
+          sed "s/^/  - /" raw_cn_ip.txt >> cn-ip.yaml
+          rm raw_cn_ip.txt
+
+      - name: Generate telegram-ip.yaml file
+        run: |
+          echo "payload:" > telegram-ip.yaml
+          touch raw_telegram_ip.txt
+          curl -sSLf --retry 3 ${{ env.telegram-ip }} | grep "  - " | sed "s/^[[:space:]]*-[[:space:]]*//g" >> raw_telegram_ip.txt
+          
+          if [ -f custom/telegram-ip.txt ]; then
+            sed 's/\r$//' custom/telegram-ip.txt >> raw_telegram_ip.txt
+          fi
+          
+          if [ -f custom/telegram-ip-remove.txt ]; then
+            sed 's/\r$//' custom/telegram-ip-remove.txt > clean_remove.txt
+            grep -vxFf clean_remove.txt raw_telegram_ip.txt > temp_telegram_ip.txt && mv temp_telegram_ip.txt raw_telegram_ip.txt
+            rm clean_remove.txt
+          fi
+          
+          sed "s/^/  - /" raw_telegram_ip.txt >> telegram-ip.yaml
+          rm raw_telegram_ip.txt
 
       - name: Move files to publish directory
         run: |

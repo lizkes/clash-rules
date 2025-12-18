@@ -6,3 +6,4 @@
 +.aws.amazon.com
 +.isif.net
 +.netjett.com
++.netcup.com
