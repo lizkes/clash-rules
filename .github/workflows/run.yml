@@ -20,10 +20,10 @@ jobs:
       private: https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/refs/heads/release/private.txt
       proxy: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/proxy-list.txt
       direct: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/direct-list.txt
-      private-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/private.yaml
+      netflix: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geosite/netflix.yaml
+      private-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geoip/private.yaml
       cn-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.yaml
-      telegram-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/telegram.yaml
-      netflix-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/netflix.yaml
+      telegram-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geoip/telegram.yaml
 
     steps:
       - name: Checkout code
@@ -61,7 +61,7 @@ jobs:
           # 3. 再执行 Python 智能过滤 (Filter)
           python3 filter.py raw_private.txt
           # 4. 格式化输出到 YAML
-          sed "s/^/  - '/; s/$/'/" raw_private.txt >> private.yaml
+          sed "s/^/  - /" raw_private.txt >> private.yaml
           rm raw_private.txt
   
       - name: Generate direct.yaml file
@@ -79,7 +79,7 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_direct.txt
-          sed "s/^/  - '/; s/$/'/" raw_direct.txt >> direct.yaml
+          sed "s/^/  - /" raw_direct.txt >> direct.yaml
           rm raw_direct.txt
 
       - name: Generate proxy.yaml file
@@ -97,14 +97,13 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_proxy.txt
-          sed "s/^/  - '/; s/$/'/" raw_proxy.txt >> proxy.yaml
+          sed "s/^/  - /" raw_proxy.txt >> proxy.yaml
           rm raw_proxy.txt
 
       - name: Generate reject.yaml file
         run: |
           echo "payload:" > reject.yaml
           touch raw_reject.txt
-          # 这是一个YAML源，处理方式稍有不同
           curl -sSLf --retry 3 ${{ env.reject }} | grep "  - '" | sed "s/^[[:space:]]*-[[:space:]]*'//g; s/'$//g" >> raw_reject.txt
           if [ -f custom/reject.txt ]; then
             sed 's/\r$//' custom/reject.txt >> raw_reject.txt
@@ -115,7 +114,7 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_reject.txt
-          sed "s/^/  - '/; s/$/'/" raw_reject.txt >> reject.yaml
+          sed "s/^/  - /" raw_reject.txt >> reject.yaml
           rm raw_reject.txt
 
       - name: Generate idc.yaml file
@@ -131,8 +130,31 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_idc.txt
-          sed "s/^/  - '/; s/$/'/" raw_idc.txt >> idc.yaml
+          sed "s/^/  - /" raw_idc.txt >> idc.yaml
           rm raw_idc.txt
+
+      - name: Generate netflix.yaml file
+        run: |
+          echo "payload:" > netflix.yaml
+          touch raw_netflix.txt
+          # 1. 下载并提取
+          curl -sSLf --retry 3 ${{ env.netflix }} | grep "  - " | sed "s/^[[:space:]]*-[[:space:]]*//g" >> raw_netflix.txt
+          
+          # 2. 处理自定义添加
+          if [ -f custom/netflix.txt ]; then
+            sed 's/\r$//' custom/netflix.txt >> raw_netflix.txt
+          fi
+          
+          # 3. 处理自定义移除
+          if [ -f custom/netflix-remove.txt ]; then
+            sed 's/\r$//' custom/netflix-remove.txt > clean_remove.txt
+            grep -vxFf clean_remove.txt raw_netflix.txt > temp_netflix.txt && mv temp_netflix.txt raw_netflix.txt
+            rm clean_remove.txt
+          fi
+          
+          # 4. 格式化输出 (开头加 "  - "，不加引号)
+          sed "s/^/  - /" raw_netflix.txt >> netflix.yaml
+          rm raw_netflix.txt
 
       - name: Generate private-ip.yaml file
         run: |
@@ -194,25 +216,6 @@ jobs:
           
           sed "s/^/  - /" raw_telegram_ip.txt >> telegram-ip.yaml
           rm raw_telegram_ip.txt
-
-      - name: Generate netflix-ip.yaml file
-        run: |
-          echo "payload:" > netflix-ip.yaml
-          touch raw_netflix_ip.txt
-          curl -sSLf --retry 3 ${{ env.netflix-ip }} | grep "  - " | sed "s/^[[:space:]]*-[[:space:]]*//g" >> raw_netflix_ip.txt
-          
-          if [ -f custom/netflix-ip.txt ]; then
-            sed 's/\r$//' custom/netflix-ip.txt >> raw_netflix_ip.txt
-          fi
-          
-          if [ -f custom/netflix-ip-remove.txt ]; then
-            sed 's/\r$//' custom/netflix-ip-remove.txt > clean_remove.txt
-            grep -vxFf clean_remove.txt raw_netflix_ip.txt > temp_netflix_ip.txt && mv temp_netflix_ip.txt raw_netflix_ip.txt
-            rm clean_remove.txt
-          fi
-          
-          sed "s/^/  - /" raw_netflix_ip.txt >> netflix-ip.yaml
-          rm raw_netflix_ip.txt
 
       - name: Move files to publish directory
         run: |
