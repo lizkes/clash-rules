@@ -34,37 +34,73 @@ jobs:
       - name: Generate private.yaml file
         run: |
           echo "payload:" > private.yaml
-          curl -sSL ${{ env.private }} | awk -F ':' '/^full:/ {printf "  - |%s|\n", $2}' | sed "s/|/'/g" >> private.yaml
-          curl -sSL ${{ env.private }} | awk -F ':' '/^domain:/ {printf "  - |+.%s|\n", $2}' | sed "s/|/'/g" >> private.yaml
-
+          touch raw_private.txt
+          curl -sSL ${{ env.private }} | awk -F ':' '/^full:/ {print $2}' >> raw_private.txt
+          curl -sSL ${{ env.private }} | awk -F ':' '/^domain:/ {print "+."$2}' >> raw_private.txt
+          if [ -f custom/private.txt ]; then
+            sed 's/\r$//' custom/private.txt >> raw_private.txt
+          fi
+          if [ -f custom/private-remove.txt ]; then
+            sed 's/\r$//' custom/private-remove.txt > clean_remove.txt
+            sort -u raw_private.txt | grep -vxFf clean_remove.txt | sed "s/^/  - '/; s/$/'/" >> private.yaml
+            rm clean_remove.txt
+          else
+            sort -u raw_private.txt | sed "s/^/  - '/; s/$/'/" >> private.yaml
+          fi
+          rm raw_private.txt
+  
       - name: Generate direct.yaml file
         run: |
           echo "payload:" > direct.yaml
-          curl -sSL ${{ env.direct }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "  - |$2|\n"' | sed "s/|/'/g" >> direct.yaml
-          curl -sSL ${{ env.direct }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "  - |+.$2|\n"' | sed "s/|/'/g" >> direct.yaml
+          touch raw_direct.txt
+          curl -sSL ${{ env.direct }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "$2\n"' >> raw_direct.txt
+          curl -sSL ${{ env.direct }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "+.$2\n"' >> raw_direct.txt
+          if [ -f custom/direct.txt ]; then
+            sed 's/\r$//' custom/direct.txt >> raw_direct.txt
+          fi
+          if [ -f custom/direct-remove.txt ]; then
+            sed 's/\r$//' custom/direct-remove.txt > clean_remove.txt
+            sort -u raw_direct.txt | grep -vxFf clean_remove.txt | sed "s/^/  - '/; s/$/'/" >> direct.yaml
+            rm clean_remove.txt
+          else
+            sort -u raw_direct.txt | sed "s/^/  - '/; s/$/'/" >> direct.yaml
+          fi
+          rm raw_direct.txt
 
       - name: Generate proxy.yaml file
         run: |
           echo "payload:" > proxy.yaml
-          curl -sSL ${{ env.proxy }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "  - |$2|\n"' | sed "s/|/'/g" >> proxy.yaml
-          curl -sSL ${{ env.proxy }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "  - |+.$2|\n"' | sed "s/|/'/g" >> proxy.yaml
+          touch raw_proxy.txt
+          curl -sSL ${{ env.proxy }} | grep -Ev "^(regexp|keyword):" | perl -ne '/^(full:)([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "$2\n"' >> raw_proxy.txt
+          curl -sSL ${{ env.proxy }} | grep -Ev "^(regexp|keyword|full):" | perl -ne '/^(domain:)?([-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+)*)/ && print "+.$2\n"' >> raw_proxy.txt
+          if [ -f custom/proxy.txt ]; then
+            sed 's/\r$//' custom/proxy.txt >> raw_proxy.txt
+          fi
+          if [ -f custom/proxy-remove.txt ]; then
+            sed 's/\r$//' custom/proxy-remove.txt > clean_remove.txt
+            sort -u raw_proxy.txt | grep -vxFf clean_remove.txt | sed "s/^/  - '/; s/$/'/" >> proxy.yaml
+            rm clean_remove.txt
+          else
+            sort -u raw_proxy.txt | sed "s/^/  - '/; s/$/'/" >> proxy.yaml
+          fi
+          rm raw_proxy.txt
 
       - name: Generate reject.yaml file
         run: |
           echo "payload:" > reject.yaml
-          touch raw_domains.txt
-          curl -sSL ${{ env.reject }} | grep "  - '" | sed "s/^[[:space:]]*-[[:space:]]*'//g; s/'$//g" >> raw_domains.txt
+          touch raw_reject.txt
+          curl -sSL ${{ env.reject }} | grep "  - '" | sed "s/^[[:space:]]*-[[:space:]]*'//g; s/'$//g" >> raw_reject.txt
           if [ -f custom/reject.txt ]; then
-            sed 's/\r$//' custom/reject.txt >> raw_domains.txt
+            sed 's/\r$//' custom/reject.txt >> raw_reject.txt
           fi
           if [ -f custom/reject-remove.txt ]; then
             sed 's/\r$//' custom/reject-remove.txt > clean_remove.txt
-            sort -u raw_domains.txt | grep -vxFf clean_remove.txt | sed "s/^/  - '/; s/$/'/" >> reject.yaml
+            sort -u raw_reject.txt | grep -vxFf clean_remove.txt | sed "s/^/  - '/; s/$/'/" >> reject.yaml
             rm clean_remove.txt
           else
-            sort -u raw_domains.txt | sed "s/^/  - '/; s/$/'/" >> reject.yaml
+            sort -u raw_reject.txt | sed "s/^/  - '/; s/$/'/" >> reject.yaml
           fi
-          rm raw_domains.txt
+          rm raw_reject.txt
 
       - name: Move files to publish directory
         run: |
