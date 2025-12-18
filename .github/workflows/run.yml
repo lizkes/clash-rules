@@ -31,25 +31,35 @@ jobs:
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
         shell: bash
 
+      # 确保 python 环境存在
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
       - name: Generate private.yaml file
         run: |
           echo "payload:" > private.yaml
           touch raw_private.txt
+          # 1. 下载并预处理格式
           curl -sSL ${{ env.private }} | awk -F ':' '/^full:/ {print $2}' >> raw_private.txt
           curl -sSL ${{ env.private }} | awk -F ':' '/^domain:/ {print "+."$2}' >> raw_private.txt
           if [ -f custom/private.txt ]; then
             sed 's/\r$//' custom/private.txt >> raw_private.txt
           fi
-          python3 filter.py raw_private.txt
+          # 2. 先执行移除逻辑 (Remove)
           if [ -f custom/private-remove.txt ]; then
             sed 's/\r$//' custom/private-remove.txt > clean_remove.txt
-            grep -vxFf clean_remove.txt raw_private.txt | sed "s/^/  - '/; s/$/'/" >> private.yaml
+            # 使用 grep -vxFf 剔除完全匹配的行，并写回 raw_private.txt
+            grep -vxFf clean_remove.txt raw_private.txt > temp_private.txt && mv temp_private.txt raw_private.txt
             rm clean_remove.txt
-          else
-            cat raw_private.txt | sed "s/^/  - '/; s/$/'/" >> private.yaml
           fi
+          # 3. 再执行 Python 智能过滤 (Filter)
+          python3 filter.py raw_private.txt
+          # 4. 格式化输出到 YAML
+          sed "s/^/  - '/; s/$/'/" raw_private.txt >> private.yaml
           rm raw_private.txt
-
+  
       - name: Generate direct.yaml file
         run: |
           echo "payload:" > direct.yaml
@@ -59,14 +69,13 @@ jobs:
           if [ -f custom/direct.txt ]; then
             sed 's/\r$//' custom/direct.txt >> raw_direct.txt
           fi
-          python3 filter.py raw_direct.txt
           if [ -f custom/direct-remove.txt ]; then
             sed 's/\r$//' custom/direct-remove.txt > clean_remove.txt
-            grep -vxFf clean_remove.txt raw_direct.txt | sed "s/^/  - '/; s/$/'/" >> direct.yaml
+            grep -vxFf clean_remove.txt raw_direct.txt > temp_direct.txt && mv temp_direct.txt raw_direct.txt
             rm clean_remove.txt
-          else
-            cat raw_direct.txt | sed "s/^/  - '/; s/$/'/" >> direct.yaml
           fi
+          python3 filter.py raw_direct.txt
+          sed "s/^/  - '/; s/$/'/" raw_direct.txt >> direct.yaml
           rm raw_direct.txt
 
       - name: Generate proxy.yaml file
@@ -78,33 +87,48 @@ jobs:
           if [ -f custom/proxy.txt ]; then
             sed 's/\r$//' custom/proxy.txt >> raw_proxy.txt
           fi
-          python3 filter.py raw_proxy.txt
           if [ -f custom/proxy-remove.txt ]; then
             sed 's/\r$//' custom/proxy-remove.txt > clean_remove.txt
-            grep -vxFf clean_remove.txt raw_proxy.txt | sed "s/^/  - '/; s/$/'/" >> proxy.yaml
+            grep -vxFf clean_remove.txt raw_proxy.txt > temp_proxy.txt && mv temp_proxy.txt raw_proxy.txt
             rm clean_remove.txt
-          else
-            cat raw_proxy.txt | sed "s/^/  - '/; s/$/'/" >> proxy.yaml
           fi
+          python3 filter.py raw_proxy.txt
+          sed "s/^/  - '/; s/$/'/" raw_proxy.txt >> proxy.yaml
           rm raw_proxy.txt
 
       - name: Generate reject.yaml file
         run: |
           echo "payload:" > reject.yaml
           touch raw_reject.txt
+          # 这是一个YAML源，处理方式稍有不同
           curl -sSL ${{ env.reject }} | grep "  - '" | sed "s/^[[:space:]]*-[[:space:]]*'//g; s/'$//g" >> raw_reject.txt
           if [ -f custom/reject.txt ]; then
             sed 's/\r$//' custom/reject.txt >> raw_reject.txt
           fi
-          python3 filter.py raw_reject.txt
           if [ -f custom/reject-remove.txt ]; then
             sed 's/\r$//' custom/reject-remove.txt > clean_remove.txt
-            grep -vxFf clean_remove.txt raw_reject.txt | sed "s/^/  - '/; s/$/'/" >> reject.yaml
+            grep -vxFf clean_remove.txt raw_reject.txt > temp_reject.txt && mv temp_reject.txt raw_reject.txt
             rm clean_remove.txt
-          else
-            cat raw_reject.txt | sed "s/^/  - '/; s/$/'/" >> reject.yaml
           fi
+          python3 filter.py raw_reject.txt
+          sed "s/^/  - '/; s/$/'/" raw_reject.txt >> reject.yaml
           rm raw_reject.txt
+
+      - name: Generate idc.yaml file
+        run: |
+          echo "payload:" > idc.yaml
+          touch raw_idc.txt
+          if [ -f custom/idc.txt ]; then
+            sed 's/\r$//' custom/idc.txt >> raw_idc.txt
+          fi
+          if [ -f custom/idc-remove.txt ]; then
+            sed 's/\r$//' custom/idc-remove.txt > clean_remove.txt
+            grep -vxFf clean_remove.txt raw_idc.txt > temp_idc.txt && mv temp_idc.txt raw_idc.txt
+            rm clean_remove.txt
+          fi
+          python3 filter.py raw_idc.txt
+          sed "s/^/  - '/; s/$/'/" raw_idc.txt >> idc.yaml
+          rm raw_idc.txt
 
       - name: Move files to publish directory
         run: |
