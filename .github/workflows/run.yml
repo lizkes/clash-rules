@@ -20,7 +20,7 @@ jobs:
       private: https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/refs/heads/release/private.txt
       proxy: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/proxy-list.txt
       direct: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/direct-list.txt
-      netflix: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geosite/netflix.yaml
+      fake-ip-filter: https://raw.githubusercontent.com/juewuy/ShellCrash/refs/heads/dev/public/fake_ip_filter.list
       private-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geoip/private.yaml
       cn-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.yaml
       telegram-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geoip/telegram.yaml
@@ -133,28 +133,28 @@ jobs:
           sed "s/^/  - /" raw_idc.txt >> idc.yaml
           rm raw_idc.txt
 
-      - name: Generate netflix.yaml file
+      - name: Generate fake-ip-filter.yaml file
         run: |
-          echo "payload:" > netflix.yaml
-          touch raw_netflix.txt
+          echo "payload:" > fake-ip-filter.yaml
+          touch raw_fake-ip-filter.txt
           # 1. 下载并提取
-          curl -sSLf --retry 3 ${{ env.netflix }} | grep "  - " | sed "s/^[[:space:]]*-[[:space:]]*//g" >> raw_netflix.txt
+          curl -sSLf --retry 3 ${{ env.fake-ip-filter }} | grep -Ev "^[[:space:]]*#|^[[:space:]]*$" >> raw_fake-ip-filter.txt
           
           # 2. 处理自定义添加
-          if [ -f custom/netflix.txt ]; then
-            sed 's/\r$//' custom/netflix.txt >> raw_netflix.txt
+          if [ -f custom/fake-ip-filter.txt ]; then
+            sed 's/\r$//' custom/fake-ip-filter.txt >> raw_fake-ip-filter.txt
           fi
           
           # 3. 处理自定义移除
-          if [ -f custom/netflix-remove.txt ]; then
-            sed 's/\r$//' custom/netflix-remove.txt > clean_remove.txt
-            grep -vxFf clean_remove.txt raw_netflix.txt > temp_netflix.txt && mv temp_netflix.txt raw_netflix.txt
+          if [ -f custom/fake-ip-filter-remove.txt ]; then
+            sed 's/\r$//' custom/fake-ip-filter-remove.txt > clean_remove.txt
+            grep -vxFf clean_remove.txt raw_fake-ip-filter.txt > temp_fake-ip-filter.txt && mv temp_fake-ip-filter.txt raw_fake-ip-filter.txt
             rm clean_remove.txt
           fi
           
           # 4. 格式化输出 (开头加 "  - "，不加引号)
-          sed "s/^/  - /" raw_netflix.txt >> netflix.yaml
-          rm raw_netflix.txt
+          sed "s/^/  - /" raw_fake-ip-filter.txt >> fake-ip-filter.yaml
+          rm raw_fake-ip-filter.txt
 
       - name: Generate private-ip.yaml file
         run: |
