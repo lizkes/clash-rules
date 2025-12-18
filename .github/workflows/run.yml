@@ -16,8 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      private: https://raw.githubusercontent.com/zydou/domain-list-community-converter/clash/private.yml
       reject: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/refs/heads/main/Filters/AWAvenue-Ads-Rule-Clash.yaml
-      private: https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/refs/heads/release/private.txt
       proxy: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/proxy-list.txt
       direct: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/direct-list.txt
       fake-ip-filter: https://raw.githubusercontent.com/juewuy/ShellCrash/refs/heads/dev/public/fake_ip_filter.list
@@ -61,7 +61,7 @@ jobs:
           # 3. 再执行 Python 智能过滤 (Filter)
           python3 filter.py raw_private.txt
           # 4. 格式化输出到 YAML
-          sed "s/^/  - /" raw_private.txt >> private.yaml
+          sed "s/^/  - '/; s/$/'/" raw_private.txt >> private.yaml
           rm raw_private.txt
   
       - name: Generate direct.yaml file
@@ -79,7 +79,7 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_direct.txt
-          sed "s/^/  - /" raw_direct.txt >> direct.yaml
+          sed "s/^/  - '/; s/$/'/" raw_direct.txt >> direct.yaml
           rm raw_direct.txt
 
       - name: Generate proxy.yaml file
@@ -97,7 +97,7 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_proxy.txt
-          sed "s/^/  - /" raw_proxy.txt >> proxy.yaml
+          sed "s/^/  - '/; s/$/'/" raw_proxy.txt >> proxy.yaml
           rm raw_proxy.txt
 
       - name: Generate reject.yaml file
@@ -114,7 +114,7 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_reject.txt
-          sed "s/^/  - /" raw_reject.txt >> reject.yaml
+          sed "s/^/  - '/; s/$/'/" raw_reject.txt >> reject.yaml
           rm raw_reject.txt
 
       - name: Generate idc.yaml file
@@ -130,7 +130,7 @@ jobs:
             rm clean_remove.txt
           fi
           python3 filter.py raw_idc.txt
-          sed "s/^/  - /" raw_idc.txt >> idc.yaml
+          sed "s/^/  - '/; s/$/'/" raw_idc.txt >> idc.yaml
           rm raw_idc.txt
 
       - name: Generate fake-ip-filter.yaml file
@@ -153,7 +153,7 @@ jobs:
           fi
           
           # 4. 格式化输出 (开头加 "  - "，不加引号)
-          sed "s/^/  - /" raw_fake-ip-filter.txt >> fake-ip-filter.yaml
+          sed "s/^/  - '/; s/$/'/" raw_fake-ip-filter.txt >> fake-ip-filter.yaml
           rm raw_fake-ip-filter.txt
 
       - name: Generate private-ip.yaml file
