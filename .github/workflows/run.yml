@@ -23,6 +23,7 @@ jobs:
       private-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/private.yaml
       cn-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.yaml
       telegram-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/telegram.yaml
+      netflix-ip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/netflix.yaml
 
     steps:
       - name: Checkout code
@@ -193,6 +194,25 @@ jobs:
           
           sed "s/^/  - /" raw_telegram_ip.txt >> telegram-ip.yaml
           rm raw_telegram_ip.txt
+
+      - name: Generate netflix-ip.yaml file
+        run: |
+          echo "payload:" > netflix-ip.yaml
+          touch raw_netflix_ip.txt
+          curl -sSLf --retry 3 ${{ env.netflix-ip }} | grep "  - " | sed "s/^[[:space:]]*-[[:space:]]*//g" >> raw_netflix_ip.txt
+          
+          if [ -f custom/netflix-ip.txt ]; then
+            sed 's/\r$//' custom/netflix-ip.txt >> raw_netflix_ip.txt
+          fi
+          
+          if [ -f custom/netflix-ip-remove.txt ]; then
+            sed 's/\r$//' custom/netflix-ip-remove.txt > clean_remove.txt
+            grep -vxFf clean_remove.txt raw_netflix_ip.txt > temp_netflix_ip.txt && mv temp_netflix_ip.txt raw_netflix_ip.txt
+            rm clean_remove.txt
+          fi
+          
+          sed "s/^/  - /" raw_netflix_ip.txt >> netflix-ip.yaml
+          rm raw_netflix_ip.txt
 
       - name: Move files to publish directory
         run: |
