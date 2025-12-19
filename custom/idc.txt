@@ -7,3 +7,5 @@
 +.isif.net
 +.netjett.com
 +.netcup.com
++.kuxueyun.com
++.freenom.com

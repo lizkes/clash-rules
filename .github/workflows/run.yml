@@ -17,20 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TZ: Asia/Shanghai
-      private-url: https://raw.githubusercontent.com/zydou/domain-list-community-converter/clash/private.yml
-      reject-url: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/refs/heads/main/Filters/AWAvenue-Ads-Rule-Clash.yaml
-      cn-games-url: https://raw.githubusercontent.com/zydou/domain-list-community-converter/clash/category-games@cn.yml
-      geo-Ncn-url: https://raw.githubusercontent.com/zydou/domain-list-community-converter/clash/geolocation-!cn.yml
-      geo-Ncn-cn-url: https://raw.githubusercontent.com/zydou/domain-list-community-converter/clash/geolocation-!cn@cn.yml
-      geo-cn-url: https://raw.githubusercontent.com/zydou/domain-list-community-converter/clash/geolocation-cn.yml
-      geol-cn-Ncn-url: https://raw.githubusercontent.com/zydou/domain-list-community-converter/clash/geolocation-cn@!cn.yml
-      # proxy: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/proxy-list.txt
-      # direct: https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/refs/heads/release/direct-list.txt
-      # 加入自定义直连和代理
-      fake-ip-filter-url: https://raw.githubusercontent.com/juewuy/ShellCrash/refs/heads/dev/public/fake_ip_filter.list
-      private-ip-url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geoip/private.yaml
-      cn-ip-url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/cn.yaml
-      telegram-ip-url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo-lite/geoip/telegram.yaml
+      private-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs
+      fakeip-filter-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs
+      ads-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ads.mrs
+      cn-games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs
+      cn-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs
+      proxy-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.mrs
+      private-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.mrs
+      cn-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.mrs
+      telegram-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.mrs
 
     steps:
       - name: Checkout code
@@ -42,100 +37,37 @@ jobs:
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
         shell: bash
 
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
-
-      - name: Install dependencies
-        run: pip install PyYAML
-
-      - name: Generate private.yaml file
+      - name: download all rules
         run: |
           # 下载
-          curl -sSLf --retry 3 ${{ env.private-url }} -o private_origin.yaml
-          # 变成raw
-          python3 yaml2raw.py -i private_origin.yaml
-          # 转成yaml
-          python3 raw2yaml.py -i private_origin.txt -o private.yaml
-  
-      - name: Generate direct.yaml and proxy.yaml file
+          curl -sSLf --retry 3 ${{ env.private-url }} -o private.mrs
+          curl -sSLf --retry 3 ${{ env.fakeip-filter-url }} -o fakeip-filter.mrs
+          curl -sSLf --retry 3 ${{ env.ads-url }} -o ads.mrs
+          curl -sSLf --retry 3 ${{ env.cn-games-url }} -o cn-games.mrs
+          curl -sSLf --retry 3 ${{ env.cn-url }} -o cn.mrs
+          curl -sSLf --retry 3 ${{ env.proxy-url }} -o proxy.mrs
+          curl -sSLf --retry 3 ${{ env.private-ip-url }} -o private-ip.mrs
+          curl -sSLf --retry 3 ${{ env.cn-ip-url }} -o cn-ip.mrs
+          curl -sSLf --retry 3 ${{ env.telegram-ip-url }} -o telegram-ip.mrs
+
+      - name: Generate custom_direct.mrs, custom_proxy.mrs, idc.mrs
         run: |
-          curl -sSLf --retry 3 ${{ env.cn-games-url }} -o cn-games.yaml
-          curl -sSLf --retry 3 ${{ env.geo-Ncn-url }} -o geo-Ncn.yaml
-          curl -sSLf --retry 3 ${{ env.geo-Ncn-cn-url }} -o geo-Ncn-cn.yaml
-          curl -sSLf --retry 3 ${{ env.geo-cn-url }} -o geo-cn.yaml
-          curl -sSLf --retry 3 ${{ env.geol-cn-Ncn-url }} -o geol-cn-Ncn.yaml
-
-          python3 yaml2raw.py -i cn-games.yaml
-          python3 yaml2raw.py -i geo-Ncn.yaml
-          python3 yaml2raw.py -i geo-Ncn-cn.yaml
-          python3 yaml2raw.py -i geo-cn.yaml
-          python3 yaml2raw.py -i geol-cn-Ncn.yaml
-
-          python3 merge_raw.py -i geo-cn.txt -d geo-Ncn.txt geo-cn-Ncn.txt -o new-geo-cn.txt
-          python3 merge_raw.py -i cn-games.txt geo-Ncn-cn.txt new-geo-cn.txt -o direct.txt
-          python3 raw2yaml.py -i direct.txt
-
-          python3 merge_raw.py -i geo-Ncn.txt geo-cn-Ncn.txt -d cn-games.txt geo-Ncn-cn.txt -o proxy.txt
-          python3 raw2yaml.py -i proxy.txt
-
-          rm *.txt
-
-      - name: Generate custom_direct.yaml and custom_proxy.yaml file
-        run: |
+          python3 raw2yaml.py -i custom/idc.txt -o idc.yaml --keep
           python3 raw2yaml.py -i custom/direct.txt -o custom_direct.yaml --keep
           python3 raw2yaml.py -i custom/proxy.txt -o custom_proxy.yaml --keep
 
-      - name: Generate reject.yaml file
-        run: |
-          # 下载
-          curl -sSLf --retry 3 ${{ env.reject-url }} -o reject_origin.yaml
-          # 变成raw
-          python3 yaml2raw.py -i reject_origin.yaml
-          # 整合
-          python3 merge_raw.py -i reject_origin.txt -d custom/reject-remove.txt -o reject.txt
-          # 转成yaml
-          python3 raw2yaml.py -i reject.txt
-          # 移除多余文件
-          rm *.txt
-
-      - name: Generate idc.yaml file
-        run: |
-          python3 raw2yaml.py -i custom/idc.txt -o idc.yaml --keep
-
-      - name: Generate fake-ip-filter.yaml file
-        run: |
-          # 下载并提取
-          curl -sSLf --retry 3 ${{ env.fake-ip-filter-url }} | grep -Ev "^[[:space:]]*#|^[[:space:]]*$" > fake-ip-filter.txt
-          # 转成yaml
-          python3 raw2yaml.py -i fake-ip-filter.txt
-
-      - name: Generate private-ip.yaml file
-        run: |
-          # 下载
-          curl -sSLf --retry 3 ${{ env.private-ip-url }} -o private-ip.yaml
-          # 移除ipv6
-          python3 remove_ipv6.py -i private-ip.yaml
-
-      - name: Generate cn-ip.yaml file
-        run: |
-          # 下载
-          curl -sSLf --retry 3 ${{ env.cn-ip-url }} -o cn-ip.yaml
-          # 移除ipv6
-          python3 remove_ipv6.py -i cn-ip.yaml
-
-      - name: Generate telegram-ip.yaml file
-        run: |
-          # 下载
-          curl -sSLf --retry 3 ${{ env.telegram-ip-url }} -o telegram-ip.yaml
-          # 移除ipv6
-          python3 remove_ipv6.py -i telegram-ip.yaml
+          wget -q https://github.com/MetaCubeX/mihomo/releases/download/v1.19.17/mihomo-linux-amd64-v1.19.17.gz
+          gunzip mihomo-linux-amd64-v1.19.17.gz
+          mv mihomo-linux-amd64 mihomo
+          chmod +x mihomo
+          mihomo convert-ruleset domain yaml idc.yaml idc.mrs
+          mihomo convert-ruleset domain yaml custom_direct.yaml custom_direct.mrs
+          mihomo convert-ruleset domain yaml custom_proxy.yaml custom_proxy.mrs
 
       - name: Move files to publish directory
         run: |
           mkdir -p publish
-          cp *.yaml ./publish/
+          cp *.mrs *.yaml ./publish/
 
       - name: Release and upload assets
         uses: softprops/action-gh-release@v2
