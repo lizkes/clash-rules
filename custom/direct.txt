@@ -55,6 +55,8 @@ tv1.micu.hk
 +.pupboss.com
 +.skyey2.com
 +.cdn.v50.su
++.yujianpay.com
 keyword:tracker.m-team
 keyword:cn.alibabacloud.com
 keyword:cn-s.alibabacloud.com
+
