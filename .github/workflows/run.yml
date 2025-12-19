@@ -58,7 +58,7 @@ jobs:
 
           wget -q https://github.com/MetaCubeX/mihomo/releases/download/v1.19.17/mihomo-linux-amd64-v1.19.17.gz
           gunzip mihomo-linux-amd64-v1.19.17.gz
-          mv mihomo-linux-amd64 mihomo
+          mv mihomo-linux-amd64-v1.19.17 mihomo
           chmod +x mihomo
           mihomo convert-ruleset domain yaml idc.yaml idc.mrs
           mihomo convert-ruleset domain yaml custom_direct.yaml custom_direct.mrs
