@@ -52,17 +52,13 @@ jobs:
 
       - name: Generate custom_direct.mrs, custom_proxy.mrs, idc.mrs
         run: |
-          python3 raw2yaml.py -i custom/idc.txt -o idc.yaml --keep
-          python3 raw2yaml.py -i custom/direct.txt -o custom_direct.yaml --keep
-          python3 raw2yaml.py -i custom/proxy.txt -o custom_proxy.yaml --keep
-
           wget -q https://github.com/MetaCubeX/mihomo/releases/download/v1.19.17/mihomo-linux-amd64-v1.19.17.gz
           gunzip mihomo-linux-amd64-v1.19.17.gz
           mv mihomo-linux-amd64-v1.19.17 mihomo
           chmod +x mihomo
-          ./mihomo convert-ruleset domain yaml idc.yaml idc.mrs
-          ./mihomo convert-ruleset domain yaml custom_direct.yaml custom_direct.mrs
-          ./mihomo convert-ruleset domain yaml custom_proxy.yaml custom_proxy.mrs
+          ./mihomo convert-ruleset domain yaml custom/idc.yaml idc.mrs
+          ./mihomo convert-ruleset domain yaml custom/direct.yaml custom_direct.mrs
+          ./mihomo convert-ruleset classical yaml custom/proxy.yaml custom_proxy.mrs
 
       - name: Move files to publish directory
         run: |
