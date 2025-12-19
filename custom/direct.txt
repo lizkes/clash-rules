@@ -15,6 +15,7 @@ share.lizkes.com
 probe.lizkes.com
 tv.micu.hk
 tv1.micu.hk
++.steamserver.net
 +.kkgithub.com
 +.bgithub.xyz
 +.dgithub.xyz
