@@ -1,2 +1,18 @@
+# https://github.com/privacy-protection-tools/anti-AD/blob/master/discretion/README.md#%E4%B8%AA%E5%88%AB%E5%9F%9F%E5%90%8D%E6%83%85%E5%86%B5%E8%AF%B4%E6%98%8E
 +.browsercfg-drcn.cloud.dbankcloud.cn
 +.imasdk.googleapis.com
+# 运营商本机号码自动登录域名
+# https://github.com/privacy-protection-tools/anti-AD/blob/master/discretion/README.md#%E4%B8%AA%E5%88%AB%E5%9F%9F%E5%90%8D%E6%83%85%E5%86%B5%E8%AF%B4%E6%98%8E
++.auth.wosms.cn
++.config.cmpassport.com
++.enrichgw.10010.com
++.hmrz.wo.cn
++.id.mail.wo.cn
++.id6.me
++.log.cmpassport.com
++.log1.cmpassport.com
++.mdn.open.wo.cn
++.mob.com
++.nishub1.10010.com
++.opencloud.wostore.cn
++.ye.dun.163yun.com
