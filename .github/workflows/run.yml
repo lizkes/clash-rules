@@ -50,7 +50,7 @@ jobs:
       - name: generate ads.mrs
         run: |
           curl -sSLf --retry 3 ${{ env.ads-url }} -o ads-origin.list
-          python3 merge_raw.py -i ads-origin.list -d custom/ads-remove.list -o ads.list
+          python3 merge_raw.py -i ads-origin.list custom/ads.list -d custom/ads-remove.list -o ads.list
           ./mihomo convert-ruleset domain text ads.list ads.mrs
 
       - name: download all rules
