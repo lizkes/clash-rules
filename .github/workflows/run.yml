@@ -19,7 +19,7 @@ jobs:
       TZ: Asia/Shanghai
       private-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs
       fakeip-filter-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs
-      ads-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ads.mrs
+      ads-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ads.list
       cn-games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs
       games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs
       tracker-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs
@@ -40,12 +40,24 @@ jobs:
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
         shell: bash
 
+      - name: download mihomo
+        run: |
+          wget -q https://github.com/MetaCubeX/mihomo/releases/download/v1.19.17/mihomo-linux-amd64-v1.19.17.gz
+          gunzip mihomo-linux-amd64-v1.19.17.gz
+          mv mihomo-linux-amd64-v1.19.17 mihomo
+          chmod +x mihomo
+
+      - name: generate ads.mrs
+        run: |
+          curl -sSLf --retry 3 ${{ env.ads-url }} -o ads-origin.list
+          python3 merge_raw.py -i ads-origin.list -d custom/ads-remove.list -o ads.list
+          ./mihomo convert-ruleset domain text ads.list ads.mrs
+
       - name: download all rules
         run: |
           # 下载
           curl -sSLf --retry 3 ${{ env.private-url }} -o private.mrs
           curl -sSLf --retry 3 ${{ env.fakeip-filter-url }} -o fakeip-filter.mrs
-          curl -sSLf --retry 3 ${{ env.ads-url }} -o ads.mrs
           curl -sSLf --retry 3 ${{ env.cn-games-url }} -o cn-games.mrs
           curl -sSLf --retry 3 ${{ env.games-url }} -o games.mrs
           curl -sSLf --retry 3 ${{ env.tracker-url }} -o tracker.mrs
@@ -58,10 +70,6 @@ jobs:
 
       - name: Generate custom_direct.mrs, custom_proxy.mrs, idc.mrs
         run: |
-          wget -q https://github.com/MetaCubeX/mihomo/releases/download/v1.19.17/mihomo-linux-amd64-v1.19.17.gz
-          gunzip mihomo-linux-amd64-v1.19.17.gz
-          mv mihomo-linux-amd64-v1.19.17 mihomo
-          chmod +x mihomo
           ./mihomo convert-ruleset domain yaml custom/idc.yaml idc.mrs
           ./mihomo convert-ruleset domain yaml custom/direct.yaml custom_direct.mrs
           ./mihomo convert-ruleset domain yaml custom/proxy.yaml custom_proxy.mrs
