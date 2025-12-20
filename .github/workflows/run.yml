@@ -22,6 +22,8 @@ jobs:
       ads-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ads.mrs
       cn-games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs
       games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs
+      tracker-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs
+      apps-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/applications.list
       cn-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs
       proxy-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.mrs
       private-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.mrs
@@ -46,6 +48,8 @@ jobs:
           curl -sSLf --retry 3 ${{ env.ads-url }} -o ads.mrs
           curl -sSLf --retry 3 ${{ env.cn-games-url }} -o cn-games.mrs
           curl -sSLf --retry 3 ${{ env.games-url }} -o games.mrs
+          curl -sSLf --retry 3 ${{ env.tracker-url }} -o tracker.mrs
+          curl -sSLf --retry 3 ${{ env.apps-url }} -o apps.list
           curl -sSLf --retry 3 ${{ env.cn-url }} -o cn.mrs
           curl -sSLf --retry 3 ${{ env.proxy-url }} -o proxy.mrs
           curl -sSLf --retry 3 ${{ env.private-ip-url }} -o private-ip.mrs
@@ -65,7 +69,7 @@ jobs:
       - name: Move files to publish directory
         run: |
           mkdir -p publish
-          cp *.mrs ./publish/
+          cp *.mrs apps.list ./publish/
 
       - name: Release and upload assets
         uses: softprops/action-gh-release@v2

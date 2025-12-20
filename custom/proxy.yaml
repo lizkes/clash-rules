@@ -1,7 +1,7 @@
 payload:
   - '+.raygo.app'
   - '+.filedn.com'
-  - '+.gstatic.com'
+  # - '+.gstatic.com'
   - community.oneplus.com
   - '+.paradoxplaza.com'
   - '+.paradoxwikis.com'
