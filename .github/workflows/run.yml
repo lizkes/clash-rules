@@ -21,6 +21,7 @@ jobs:
       fakeip-filter-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs
       ads-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ads.mrs
       cn-games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs
+      games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs
       cn-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs
       proxy-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.mrs
       private-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.mrs
@@ -44,6 +45,7 @@ jobs:
           curl -sSLf --retry 3 ${{ env.fakeip-filter-url }} -o fakeip-filter.mrs
           curl -sSLf --retry 3 ${{ env.ads-url }} -o ads.mrs
           curl -sSLf --retry 3 ${{ env.cn-games-url }} -o cn-games.mrs
+          curl -sSLf --retry 3 ${{ env.games-url }} -o games.mrs
           curl -sSLf --retry 3 ${{ env.cn-url }} -o cn.mrs
           curl -sSLf --retry 3 ${{ env.proxy-url }} -o proxy.mrs
           curl -sSLf --retry 3 ${{ env.private-ip-url }} -o private-ip.mrs
