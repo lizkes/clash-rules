@@ -68,11 +68,11 @@ jobs:
           curl -sSLf --retry 3 ${{ env.cn-ip-url }} -o cn-ip.mrs
           curl -sSLf --retry 3 ${{ env.telegram-ip-url }} -o telegram-ip.mrs
 
-      - name: Generate custom_direct.mrs, custom_proxy.mrs, idc.mrs
+      - name: Generate custom-direct.mrs, custom-proxy.mrs, idc.mrs
         run: |
           ./mihomo convert-ruleset domain yaml custom/idc.yaml idc.mrs
-          ./mihomo convert-ruleset domain yaml custom/direct.yaml custom_direct.mrs
-          ./mihomo convert-ruleset domain yaml custom/proxy.yaml custom_proxy.mrs
+          ./mihomo convert-ruleset domain yaml custom/direct.yaml custom-direct.mrs
+          ./mihomo convert-ruleset domain yaml custom/proxy.yaml custom-proxy.mrs
 
       - name: Move files to publish directory
         run: |
