@@ -7,7 +7,7 @@ def is_ipv6(cidr_str):
     """
     判断字符串是否为 IPv6 地址或网段
     """
-    cidr_str = cidr_str.strip().strip("'").strip('"')
+    cidr_str = cidr_str.strip()
     if ':' not in cidr_str:
         return False
     try:
@@ -16,34 +16,53 @@ def is_ipv6(cidr_str):
     except ValueError:
         return False
 
-def process_yaml(input_path, output_path, keep_source):
+def process_raw_list(input_path, output_path, keep_source):
     try:
+        if not os.path.exists(input_path):
+            print(f"Error: Input file '{input_path}' not found.")
+            sys.exit(1)
+
         # 1. 读取内容
         with open(input_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         
         kept_lines = []
-        removed_count = 0
+        ipv6_count = 0
+        misc_removed_count = 0 # 统计删除的空行和注释
         
-        # 2. 过滤 IPv6
+        # 2. 遍历处理
         for line in lines:
-            stripped = line.strip()
-            if stripped.startswith('-'):
-                content = stripped.lstrip('-').strip()
-                if is_ipv6(content):
-                    removed_count += 1
-                    continue
-            kept_lines.append(line)
+            content = line.strip()
+            
+            # --- 规则 A: 删除空行 ---
+            if not content:
+                misc_removed_count += 1
+                continue
+
+            # --- 规则 B: 删除注释行 ---
+            if content.startswith("#"):
+                misc_removed_count += 1
+                continue
+
+            # --- 规则 C: 删除 IPv6 ---
+            if is_ipv6(content):
+                ipv6_count += 1
+                continue 
+            
+            # --- 规则 D: 保留 IPv4 ---
+            # 重新加上换行符，确保输出文件整洁，无多余空格
+            kept_lines.append(content + '\n')
             
         # 3. 写入新文件
         with open(output_path, 'w', encoding='utf-8') as f:
             f.writelines(kept_lines)
             
-        print(f"Success: Processed. Removed {removed_count} IPv6 rules.")
+        print(f"Success: Processed {input_path}")
+        print(f"  - Removed {ipv6_count} IPv6 addresses.")
+        print(f"  - Removed {misc_removed_count} comments/empty lines.")
         print(f"  -> Saved to: {output_path}")
 
-        # 4. 根据参数决定是否删除源文件
-        # 注意：如果输入路径和输出路径相同（原地修改），则不执行删除，否则文件就没了
+        # 4. 处理源文件删除逻辑
         abs_input = os.path.abspath(input_path)
         abs_output = os.path.abspath(output_path)
 
@@ -54,9 +73,6 @@ def process_yaml(input_path, output_path, keep_source):
                     print(f"  -> Source file deleted: {input_path}")
                 except OSError as e:
                     print(f"  -> Warning: Failed to delete source file: {e}")
-            else:
-                # 原地修改模式，不需要删除源文件（因为它已经被覆盖了）
-                pass
         else:
             print(f"  -> Source file kept: {input_path}")
 
@@ -65,17 +81,14 @@ def process_yaml(input_path, output_path, keep_source):
         sys.exit(1)
 
 def main():
-    parser = argparse.ArgumentParser(description="Remove IPv6 addresses from YAML.")
+    parser = argparse.ArgumentParser(description="Clean Raw List: Remove IPv6, comments, and empty lines.")
     
-    # -i 仍然是必须的
     parser.add_argument('-i', '--input', required=True, 
                         help="Input file path")
     
-    # -o 变为可选
     parser.add_argument('-o', '--output', required=False, 
-                        help="Output YAML file path. Defaults to input filename with .yaml extension.")
+                        help="Output file path. Defaults to input filename with .list extension.")
     
-    # --keep 开关 (store_true 表示出现该参数为 True，否则为 False)
     parser.add_argument('--keep', action='store_true', 
                         help="Keep the source file. If not specified, source file will be deleted.")
     
@@ -84,13 +97,11 @@ def main():
     input_path = args.input
     output_path = args.output
 
-    # 如果没有指定输出路径，自动生成
     if not output_path:
-        # 获取文件名（不含扩展名）
         base_name = os.path.splitext(input_path)[0]
-        output_path = f"{base_name}.yaml"
+        output_path = f"{base_name}.list"
     
-    process_yaml(input_path, output_path, args.keep)
+    process_raw_list(input_path, output_path, args.keep)
 
 if __name__ == "__main__":
     main()
