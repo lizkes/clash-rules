@@ -17,18 +17,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TZ: Asia/Shanghai
-      private-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs
-      fakeip-filter-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs
+      private-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.list
+      fakeip-filter-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.list
       ads-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ads.list
-      cn-games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs
-      games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.mrs
-      tracker-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs
+      cn-games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.list
+      games-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games.list
+      tracker-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.list
       apps-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/applications.list
-      cn-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs
-      proxy-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.mrs
-      private-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.mrs
-      cn-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.mrs
-      telegram-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.mrs
+      cn-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.list
+      proxy-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.list
+      private-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.list
+      cn-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.list
+      telegram-ip-url: https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.list
 
     steps:
       - name: Checkout code
@@ -47,37 +47,47 @@ jobs:
           mv mihomo-linux-amd64-v1.19.17 mihomo
           chmod +x mihomo
 
-      - name: generate ads.mrs
+      - name: download list and generate mrs
         run: |
           curl -sSLf --retry 3 ${{ env.ads-url }} -o ads-origin.list
           python3 merge_raw.py -i ads-origin.list custom/ads.list -d custom/ads-remove.list -o ads.list
           ./mihomo convert-ruleset domain text ads.list ads.mrs
+          rm ads-origin.list
 
-      - name: Generate custom-direct.mrs, custom-proxy.mrs, idc.mrs
-        run: |
-          ./mihomo convert-ruleset domain text custom/idc.list idc.mrs
-          ./mihomo convert-ruleset domain text custom/direct.list custom-direct.mrs
-          ./mihomo convert-ruleset domain text custom/proxy.list custom-proxy.mrs
+          mv custom/idc.list idc.list
+          mv custom/direct.list custom-direct.list
+          mv custom/proxy.list custom-proxy.list
+          ./mihomo convert-ruleset domain text idc.list idc.mrs
+          ./mihomo convert-ruleset domain text custom-direct.list custom-direct.mrs
+          ./mihomo convert-ruleset domain text custom-proxy.list custom-proxy.mrs
 
-      - name: download all rules
-        run: |
-          # 下载
-          curl -sSLf --retry 3 ${{ env.private-url }} -o private.mrs
-          curl -sSLf --retry 3 ${{ env.fakeip-filter-url }} -o fakeip-filter.mrs
-          curl -sSLf --retry 3 ${{ env.cn-games-url }} -o cn-games.mrs
-          curl -sSLf --retry 3 ${{ env.games-url }} -o games.mrs
-          curl -sSLf --retry 3 ${{ env.tracker-url }} -o tracker.mrs
+          curl -sSLf --retry 3 ${{ env.private-url }} -o private.list
+          curl -sSLf --retry 3 ${{ env.fakeip-filter-url }} -o fakeip-filter.list
+          curl -sSLf --retry 3 ${{ env.cn-games-url }} -o cn-games.list
+          curl -sSLf --retry 3 ${{ env.games-url }} -o games.list
+          curl -sSLf --retry 3 ${{ env.tracker-url }} -o tracker.list
+          curl -sSLf --retry 3 ${{ env.cn-url }} -o cn.list
+          curl -sSLf --retry 3 ${{ env.proxy-url }} -o proxy.list
+          curl -sSLf --retry 3 ${{ env.private-ip-url }} -o private-ip.list
+          curl -sSLf --retry 3 ${{ env.cn-ip-url }} -o cn-ip.list
+          curl -sSLf --retry 3 ${{ env.telegram-ip-url }} -o telegram-ip.list
+          ./mihomo convert-ruleset domain text private.list private.mrs
+          ./mihomo convert-ruleset domain text fakeip-filter.list fakeip-filter.mrs
+          ./mihomo convert-ruleset domain text cn-games.list cn-games.mrs
+          ./mihomo convert-ruleset domain text games.list games.mrs
+          ./mihomo convert-ruleset domain text tracker.list tracker.mrs
+          ./mihomo convert-ruleset domain text cn.list cn.mrs
+          ./mihomo convert-ruleset domain text proxy.list proxy.mrs
+          ./mihomo convert-ruleset ipcidr text private-ip.list private-ip.mrs
+          ./mihomo convert-ruleset ipcidr text cn-ip.list cn-ip.mrs
+          ./mihomo convert-ruleset ipcidr text telegram-ip.list telegram-ip.mrs
+
           curl -sSLf --retry 3 ${{ env.apps-url }} -o apps.list
-          curl -sSLf --retry 3 ${{ env.cn-url }} -o cn.mrs
-          curl -sSLf --retry 3 ${{ env.proxy-url }} -o proxy.mrs
-          curl -sSLf --retry 3 ${{ env.private-ip-url }} -o private-ip.mrs
-          curl -sSLf --retry 3 ${{ env.cn-ip-url }} -o cn-ip.mrs
-          curl -sSLf --retry 3 ${{ env.telegram-ip-url }} -o telegram-ip.mrs
 
       - name: Move files to publish directory
         run: |
           mkdir -p publish
-          cp *.mrs apps.list ./publish/
+          cp *.mrs *.list ./publish/
 
       - name: Release and upload assets
         uses: softprops/action-gh-release@v2
