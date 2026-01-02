@@ -55,11 +55,13 @@ jobs:
           rm ads-origin.list
 
           mv custom/idc.list idc.list
-          mv custom/direct.list custom-direct.list
-          mv custom/proxy.list custom-proxy.list
           ./mihomo convert-ruleset domain text idc.list idc.mrs
+          mv custom/direct.list custom-direct.list
           ./mihomo convert-ruleset domain text custom-direct.list custom-direct.mrs
+          mv custom/proxy.list custom-proxy.list
           ./mihomo convert-ruleset domain text custom-proxy.list custom-proxy.mrs
+          mv custom/social-cn.list social-cn.list
+          ./mihomo convert-ruleset domain text social-cn.list social-cn.mrs
 
           curl -sSLf --retry 3 ${{ env.private-url }} -o private.list
           curl -sSLf --retry 3 ${{ env.fakeip-filter-url }} -o fakeip-filter.list
